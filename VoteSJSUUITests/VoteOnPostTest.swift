@@ -1,14 +1,14 @@
 //
-//  VoteSJSUUITests.swift
+//  VoteOnPostTest.swift
 //  VoteSJSUUITests
 //
-//  Created by Personal on 4/24/18.
+//  Created by Personal on 5/8/18.
 //  Copyright © 2018 San Jose State University. All rights reserved.
 //
 
 import XCTest
 
-class VoteSJSUUITests: XCTestCase {
+class VoteOnPostTest: XCTestCase {
         
     override func setUp() {
         super.setUp()
@@ -31,6 +31,13 @@ class VoteSJSUUITests: XCTestCase {
     func testExample() {
         // Use recording to get started writing UI tests.
         // Use XCTAssert and related functions to verify your tests produce the correct results.
+        let app = XCUIApplication()
+        app/*@START_MENU_TOKEN@*/.buttons["GIDSignInButton"]/*[[".buttons[\"Sign in\"]",".buttons[\"GIDSignInButton\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.tap()
+        app.tables/*@START_MENU_TOKEN@*/.staticTexts["This is my poll"]/*[[".cells.staticTexts[\"This is my poll\"]",".staticTexts[\"This is my poll\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.tap()
+        app.buttons["This is choice 4"].tap()
+        XCTAssert(app.staticTexts["4"].exists)
+        app.buttons["This is choice 1"].tap()
+        XCTAssert(app.staticTexts["1"].exists)
     }
     
 }

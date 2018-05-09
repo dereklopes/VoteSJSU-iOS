@@ -1,24 +1,79 @@
 //
 //  AppDelegate.swift
-//  VoteSJSU
+//  ideaHub
 //
-//  Created by Personal on 4/24/18.
-//  Copyright © 2018 San Jose State University. All rights reserved.
+//  Created by Derek Lopes on 2/26/17.
+//  Copyright © 2017 San Jose State University. All rights reserved.
 //
 
 import UIKit
+import GoogleSignIn
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
 
     var window: UIWindow?
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        
+        // Initialize Google sign-in
+        GIDSignIn.sharedInstance().clientID = "778448780612-4e7k0n8vms32mnlukkgbpq5kp21upjti.apps.googleusercontent.com"
+        GIDSignIn.sharedInstance().delegate = self
+        
+        // set colors
+        UINavigationBar.appearance().barTintColor = UIColor(red: 28/255, green: 115/255, blue: 255/255, alpha: 1)
+        UINavigationBar.appearance().tintColor = UIColor.white
+        
         return true
     }
-
+    
+    func application(_ app: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
+        return GIDSignIn.sharedInstance().handle(url,
+            sourceApplication: options[UIApplicationOpenURLOptionsKey.sourceApplication] as? String,
+            annotation: options[UIApplicationOpenURLOptionsKey.sourceApplication])
+    }
+    
+    func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!, withError error: Error!) {
+        // Call backend to authenticate and create user if needed
+        let requestBody = ["email": user.profile.email!, "name": user.profile.name!, "token": "ACCOUNTTESTTOKEN"]
+        let requestResponse = APIClient.post(endpoint: Constants.ACCOUNT_ENDPOINT, body: requestBody)
+        if requestResponse.rc != 201 {
+            print("Google sign in succeeded but failed to authenticate with the backend. Signing out.")
+            signIn.signOut()
+            return
+        }
+    
+        
+        if let error = error {
+            print("\(error.localizedDescription)")
+        } else {
+            print("Logged in as \(user.profile.email!)")
+            // show home view
+            let storyboard = UIStoryboard(name: "Main", bundle: nil)
+            let vc = storyboard.instantiateViewController(withIdentifier: "TabBarController")
+            self.window = UIWindow(frame: UIScreen.main.bounds)
+            self.window?.rootViewController = vc
+            self.window?.makeKeyAndVisible()
+        }
+    }
+    
+    func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!, withError error: Error!) {
+        // disconnect from app
+        if(error == nil) {
+            print("signed out")
+            // go back to log in view
+            let storyboard = UIStoryboard(name: "Main", bundle: nil)
+            let vc = storyboard.instantiateViewController(withIdentifier: "LoginViewController")
+            self.window = UIWindow(frame: UIScreen.main.bounds)
+            self.window?.rootViewController = vc
+            self.window?.makeKeyAndVisible()
+        } else {
+            print("\(error.localizedDescription)")
+        }
+    }
+    
     func applicationWillResignActive(_ application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
         // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
